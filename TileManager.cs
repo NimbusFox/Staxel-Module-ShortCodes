@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using NimbusFox;
 using Plukit.Base;
 using Staxel;
-using Staxel.Logic;
 using Staxel.Tiles;
 
 namespace NimbusFox.Module.ShortCodes {
@@ -18,22 +13,9 @@ namespace NimbusFox.Module.ShortCodes {
         private const string DataFile = "Tiles.json";
 
         static TileShortCodes() {
-            _fileManager = new DirectoryManager("NimbusFox", "ShortCodes");
-
-            if (!_fileManager.FileExists(DataFile)) {
-                _data = new Dictionary<string, DictionaryData>();
-            } else {
-                var pause = true;
-
-                _fileManager.ReadFile<Dictionary<string, DictionaryData>>(DataFile, data => {
-                    _data = data;
-                    pause = false;
-                }, true);
-
-                while (pause) { }
-            }
-
+           
             var tiles = GameContext.TileDatabase.AllMaterials().ToList();
+            _data = new Dictionary<string, DictionaryData>();
 
             foreach (var tile in tiles) {
                 var bits = tile.Code.Split('.');
@@ -51,9 +33,7 @@ namespace NimbusFox.Module.ShortCodes {
                 _data[name] = GetData(bits, name, index, tile, _data[name], variantCode);
             }
 
-            Logger.WriteLine($"ShortCodes: Writing {tiles.Count} dictionary tiles");
-
-            _fileManager.WriteFile(DataFile, _data, null, true);
+            Logger.WriteLine($"ShortCodes: Found {tiles.Count} tiles");
         }
 
         private static DictionaryData GetData(IReadOnlyList<string> bits, string name, int index, TileConfiguration tile, DictionaryData parent, string variantCode = null) {
@@ -67,8 +47,6 @@ namespace NimbusFox.Module.ShortCodes {
             if (!parent.Variants.ContainsKey(variantCode) && !parent.SubVariants.Any(x => x.SubVariantKey == variantCode) &&
                 !parent.SubVariants.Any(x => x.Variants.ContainsKey(variantCode))) {
                 parent.Variants.Add(variantCode, tile.Code);
-
-                parent.Variants = parent.Variants.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
                 return parent;
             }
 
@@ -86,7 +64,6 @@ namespace NimbusFox.Module.ShortCodes {
 
                     variant.Variants.Add(vCode, parent.Variants[variantCode]);
                     parent.Variants.Remove(variantCode);
-                    variant.Variants = variant.Variants.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
                 }
 
                 parent.SubVariants.Add(variant);

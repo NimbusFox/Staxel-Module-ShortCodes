@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Plukit.Base;
 using Staxel;
 
@@ -78,7 +75,7 @@ namespace NimbusFox.Module.ShortCodes {
             }).Start();
         }
 
-        public void WriteFileStream(string filename, Stream stream) {
+        public void WriteFileStream(string filename, MemoryStream stream) {
             new Thread(() => {
                 stream.Seek(0L, SeekOrigin.Begin);
                 GameContext.ContentLoader.WriteLocalStream(Path.Combine(_localContentLocation, filename), stream);
